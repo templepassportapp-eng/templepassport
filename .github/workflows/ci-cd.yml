@@ -81,15 +81,19 @@ jobs:
     needs: [test-backend, build-admin]
     runs-on: ubuntu-latest
     if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    permissions:
+      contents: read
+      id-token: write   # required for Workload Identity Federation
 
     steps:
       - uses: actions/checkout@v4
 
-      # Authenticate to GCP using the service account key secret
+      # Authenticate via OIDC — no JSON key needed
       - name: Authenticate to GCP
         uses: google-github-actions/auth@v2
         with:
-          credentials_json: ${{ secrets.GCP_SA_KEY }}
+          workload_identity_provider: ${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER }}
+          service_account: ${{ secrets.GCP_SERVICE_ACCOUNT }}
 
       - name: Set up Cloud SDK
         uses: google-github-actions/setup-gcloud@v2
