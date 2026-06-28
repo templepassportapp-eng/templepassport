@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Temple Passport — API Test UI</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: system-ui, sans-serif; background: #0f0f0f; color: #e0e0e0; padding: 24px; }
+    h1 { color: #f5a623; margin-bottom: 24px; font-size: 22px; }
+    h2 { color: #aaa; font-size: 14px; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 12px; }
+    .card { background: #1a1a1a; border: 1px solid #2a2a2a; border-radius: 10px; padding: 20px; margin-bottom: 20px; }
+    input, textarea {
+      width: 100%; padding: 10px 14px; background: #111; border: 1px solid #333;
+      border-radius: 6px; color: #e0e0e0; font-size: 14px; margin-bottom: 12px;
+    }
+    input:focus, textarea:focus { outline: none; border-color: #f5a623; }
+    button {
+      background: #f5a623; color: #111; border: none; border-radius: 6px;
+      padding: 10px 20px; font-size: 14px; font-weight: 600; cursor: pointer;
+    }
+    button:hover { background: #e09510; }
+    button.ghost {
+      background: transparent; color: #aaa; border: 1px solid #333; margin-left: 8px;
+    }
+    button.ghost:hover { border-color: #aaa; color: #e0e0e0; }
+    .results { margin-top: 16px; }
+    .temple-item {
+      background: #111; border: 1px solid #2a2a2a; border-radius: 8px;
+      padding: 14px; margin-bottom: 10px; cursor: pointer; transition: border-color .15s;
+    }
+    .temple-item:hover { border-color: #f5a623; }
+    .temple-item.selected { border-color: #f5a623; background: #1e1600; }
+    .temple-name { font-weight: 600; color: #fff; }
+    .temple-meta { font-size: 13px; color: #777; margin-top: 4px; }
+    .badge {
+      display: inline-block; padding: 3px 10px; border-radius: 20px;
+      font-size: 12px; font-weight: 700; margin-top: 8px;
+    }
+    .badge.verified { background: #1a3a1a; color: #4caf50; }
+    .badge.self { background: #2a2a1a; color: #f5a623; }
+    .response-box {
+      background: #111; border: 1px solid #2a2a2a; border-radius: 6px;
+      padding: 14px; font-size: 13px; font-family: monospace; white-space: pre-wrap;
+      color: #aaa; margin-top: 12px; max-height: 220px; overflow-y: auto;
+    }
+    .checkin-result {
+      text-align: center; padding: 24px;
+    }
+    .tick-circle {
+      width: 64px; height: 64px; border-radius: 50%; background: #1a3a1a;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 32px; margin: 0 auto 16px;
+    }
+    .label { font-size: 13px; color: #777; margin-bottom: 4px; }
+    .row { display: flex; gap: 12px; }
+    .row > * { flex: 1; }
+    #status { font-size: 13px; color: #f5a623; margin-top: 8px; min-height: 20px; }
+  </style>
+</head>
+<body>
+  <h1>Temple Passport — API Test</h1>
+
+  <!-- Search -->
+  <div class="card">
+    <h2>1. Search Temples</h2>
+    <input id="searchInput" type="text" placeholder="e.g. Kedar, Badri, Kashi…" />
+    <button onclick="searchTemples()">Search</button>
+    <div id="templeResults" class="results"></div>
+  </div>
+
+  <!-- Check In -->
+  <div class="card">
+    <h2>2. Check In</h2>
+    <div id="selectedTemple" style="color:#777;font-size:13px;margin-bottom:12px;">
+      No temple selected — tap one above
+    </div>
+    <div class="row">
+      <div>
+        <div class="label">Latitude (optional)</div>
+        <input id="lat" type="number" step="any" placeholder="e.g. 30.7346" />
+      </div>
+      <div>
+        <div class="label">Longitude (optional)</div>
+        <input id="lon" type="number" step="any" placeholder="e.g. 79.0669" />
+      </div>
+    </div>
+    <div class="label">Notes (optional)</div>
+    <textarea id="notes" rows="2" placeholder="A memory from your visit…"></textarea>
+    <div>
+      <button onclick="checkIn(true)">Verify location &amp; check in</button>
+      <button class="ghost" onclick="checkIn(false)">Check in without location</button>
+    </div>
+    <div id="status"></div>
+    <div id="checkinResult"></div>
+  </div>
+
+  <!-- Raw response -->
+  <div class="card">
+    <h2>Last API Response</h2>
+    <div id="rawResponse" class="response-box">—</div>
+  </div>
+
+  <script>
+    const API = 'http://localhost:8080/api';
+    const DEV_USER = '00000000-0000-0000-0000-0000000000aa';
+    let selectedTemple = null;
+
+    async function searchTemples() {
+      const q = document.getElementById('searchInput').value.trim();
+      if (!q) return;
+      setStatus('Searching…');
+      try {
+        const res = await fetch(`${API}/temples/search?q=${encodeURIComponent(q)}`);
+        const temples = await res.json();
+        setRaw(temples);
+        clearStatus();
+        const container = document.getElementById('templeResults');
+        if (!temples.length) { container.innerHTML = '<div style="color:#777;font-size:13px">No results</div>'; return; }
+        container.innerHTML = temples.map(t => `
+          <div class="temple-item" id="t-${t.id}" onclick="selectTemple(${JSON.stringify(t).replace(/"/g,'&quot;')})">
+            <div class="temple-name">${t.name}</div>
+            <div class="temple-meta">${[t.deity, t.city, t.state].filter(Boolean).join(' · ')}</div>
+            <div class="temple-meta">Verification radius: ${t.verificationRadius ?? 750} m</div>
+          </div>`).join('');
+      } catch (e) { setStatus('Error: ' + e.message); }
+    }
+
+    function selectTemple(t) {
+      selectedTemple = t;
+      document.querySelectorAll('.temple-item').forEach(el => el.classList.remove('selected'));
+      document.getElementById('t-' + t.id)?.classList.add('selected');
+      document.getElementById('selectedTemple').innerHTML =
+        `<strong style="color:#fff">${t.name}</strong> <span style="color:#777">· ${t.city ?? ''}, ${t.state ?? ''}</span>`;
+      document.getElementById('lat').placeholder = t.latitude;
+      document.getElementById('lon').placeholder = t.longitude;
+    }
+
+    async function checkIn(withLocation) {
+      if (!selectedTemple) { setStatus('Select a temple first'); return; }
+      const lat = parseFloat(document.getElementById('lat').value) || null;
+      const lon = parseFloat(document.getElementById('lon').value) || null;
+      const body = {
+        userId: DEV_USER,
+        templeId: selectedTemple.id,
+        ...(withLocation && lat != null && lon != null ? { latitude: lat, longitude: lon } : {}),
+        notes: document.getElementById('notes').value.trim() || undefined,
+      };
+      setStatus('Checking in…');
+      try {
+        const res = await fetch(`${API}/checkins`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(body),
+        });
+        const data = await res.json();
+        setRaw(data);
+        clearStatus();
+        const verified = data.verificationType === 'VERIFIED';
+        document.getElementById('checkinResult').innerHTML = `
+          <div class="checkin-result">
+            <div class="tick-circle">✓</div>
+            <div style="font-size:18px;font-weight:700;margin-bottom:6px">Checked in</div>
+            <div style="color:#777;margin-bottom:12px">${selectedTemple.name}</div>
+            <span class="badge ${verified ? 'verified' : 'self'}">${verified ? '✓ GPS Verified' : '~ Self-Reported'}</span>
+            ${!verified ? `<div style="font-size:13px;color:#777;margin-top:10px">Not within ${selectedTemple.verificationRadius ?? 750} m of the temple</div>` : ''}
+          </div>`;
+      } catch (e) { setStatus('Error: ' + e.message); }
+    }
+
+    document.getElementById('searchInput').addEventListener('keydown', e => { if (e.key === 'Enter') searchTemples(); });
+
+    function setStatus(msg) { document.getElementById('status').textContent = msg; }
+    function clearStatus() { document.getElementById('status').textContent = ''; }
+    function setRaw(data) { document.getElementById('rawResponse').textContent = JSON.stringify(data, null, 2); }
+
+    // Auto-search on load
+    document.getElementById('searchInput').value = 'Kedar';
+    searchTemples();
+  </script>
+</body>
+</html>

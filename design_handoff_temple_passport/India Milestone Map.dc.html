@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Marcellus&family=Mukta:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+@keyframes tp-wave { 0%,100%{transform:skewY(-2deg);clip-path:polygon(0 0,100% 5%,100% 95%,0 100%);} 50%{transform:skewY(2deg);clip-path:polygon(0 5%,100% 0,100% 100%,0 95%);} }
+@keyframes tp-wave-lg { 0%,100%{transform:skewY(-2.5deg);clip-path:polygon(0 0,100% 6%,100% 94%,0 100%);} 50%{transform:skewY(2.5deg);clip-path:polygon(0 6%,100% 0,100% 100%,0 94%);} }
+body{margin:0;background:#d8d3ca;}
+</style>
+</helmet>
+<div style="width:390px;min-height:780px;background:#FBF4E6;font-family:'Mukta',system-ui,sans-serif;color:#3A2418;box-sizing:border-box;display:flex;flex-direction:column;">
+  <!-- header -->
+  <div style="padding:24px 26px 8px;">
+    <div style="font-family:'Mukta';font-size:11px;letter-spacing:0.18em;color:#9A5A2A;text-transform:uppercase;">Milestones · Bhārat relief map</div>
+    <div style="font-family:'Marcellus';font-size:26px;color:#4A1220;margin-top:3px;">Jyotirlinga Yatra map</div>
+    <div style="display:flex;align-items:center;gap:10px;margin-top:12px;">
+      <div style="flex:1;height:8px;border-radius:4px;background:rgba(107,26,44,0.12);overflow:hidden;"><div style="width:33%;height:100%;border-radius:4px;background:linear-gradient(90deg,#C49A3A,#E8C46A);"></div></div>
+      <span style="font-family:'Marcellus';font-size:14px;color:#6B1A2C;white-space:nowrap;">4 <span style="color:#9A5A2A;font-size:12px;">/ 12 planted</span></span>
+    </div>
+  </div>
+
+  <!-- 3D relief map stage -->
+  <div style="position:relative;align-self:center;width:322px;height:404px;margin-top:8px;">
+    <!-- ground cast shadow -->
+    <div style="position:absolute;left:6%;right:6%;bottom:34px;height:46px;background:radial-gradient(50% 50% at 50% 50%,rgba(74,18,32,0.30),transparent 72%);filter:blur(3px);"></div>
+
+    <!-- extruded slab side -->
+    <sc-for list="{{ slab }}" as="l" hint-placeholder-count="16">
+      <div style="position:absolute;inset:0;transform:translateY({{ l.off }}px);clip-path:polygon(40% 3%,49% 7%,58% 9%,66% 11%,73% 14%,72% 19%,80% 18%,92% 14%,90% 22%,84% 27%,78% 24%,73% 24%,70% 21%,72% 28%,71% 36%,75% 45%,72% 56%,66% 70%,62% 77%,57% 68%,55% 57%,52% 48%,49% 40%,44% 35%,37% 37%,32% 33%,28% 35%,33% 29%,30% 24%,34% 17%,33% 11%);background:{{ l.shade }};"></div>
+    </sc-for>
+
+    <!-- top surface: hypsometric elevation -->
+    <div style="position:absolute;inset:0;clip-path:polygon(40% 3%,49% 7%,58% 9%,66% 11%,73% 14%,72% 19%,80% 18%,92% 14%,90% 22%,84% 27%,78% 24%,73% 24%,70% 21%,72% 28%,71% 36%,75% 45%,72% 56%,66% 70%,62% 77%,57% 68%,55% 57%,52% 48%,49% 40%,44% 35%,37% 37%,32% 33%,28% 35%,33% 29%,30% 24%,34% 17%,33% 11%);background:linear-gradient(177deg,#9c7a44 0%,#b89a5e 7%,#cabb7c 14%,#bcc78c 23%,#c6cb8a 33%,#cfc285 46%,#bfca8d 64%,#cbc081 82%,#c3c98c 100%);box-shadow:inset 0 0 0 1.5px rgba(74,18,32,0.45);"></div>
+    <!-- snow on Himalaya -->
+    <div style="position:absolute;inset:0;clip-path:polygon(40% 3%,49% 7%,58% 9%,66% 11%,73% 14%,72% 19%,80% 18%,92% 14%,90% 22%,84% 27%,78% 24%,73% 24%,70% 21%,72% 28%,71% 36%,75% 45%,72% 56%,66% 70%,62% 77%,57% 68%,55% 57%,52% 48%,49% 40%,44% 35%,37% 37%,32% 33%,28% 35%,33% 29%,30% 24%,34% 17%,33% 11%);background:linear-gradient(180deg,rgba(255,255,255,0.8),rgba(255,255,255,0) 11%);"></div>
+    <!-- hillshade -->
+    <div style="position:absolute;inset:0;clip-path:polygon(40% 3%,49% 7%,58% 9%,66% 11%,73% 14%,72% 19%,80% 18%,92% 14%,90% 22%,84% 27%,78% 24%,73% 24%,70% 21%,72% 28%,71% 36%,75% 45%,72% 56%,66% 70%,62% 77%,57% 68%,55% 57%,52% 48%,49% 40%,44% 35%,37% 37%,32% 33%,28% 35%,33% 29%,30% 24%,34% 17%,33% 11%);background:linear-gradient(125deg,rgba(255,250,235,0.38),rgba(255,250,235,0) 42%),linear-gradient(305deg,rgba(60,30,12,0.32),rgba(60,30,12,0) 46%);"></div>
+
+    <!-- ridges + rivers -->
+    <svg viewBox="0 0 322 388" style="position:absolute;inset:0;width:100%;height:100%;overflow:visible;">
+      <defs><clipPath id="india_clip"><polygon points="128.8,11.6 157.8,27.2 186.8,34.9 212.5,42.7 235.1,54.3 231.8,73.7 257.6,69.8 296.2,54.3 289.8,85.4 270.5,104.8 251.2,93.1 235.1,93.1 225.4,81.5 231.8,108.6 228.6,139.7 241.5,174.6 231.8,217.3 212.5,271.6 199.6,298.8 183.5,263.8 177.1,221.2 167.4,186.2 157.8,155.2 141.7,135.8 119.1,143.6 103,128 90.2,135.8 106.3,112.5 96.6,93.1 109.5,66 106.3,42.7"/></clipPath></defs>
+      <g clip-path="url(#india_clip)">
+        <path d="M104,66 C 130,52 165,40 205,42 C 245,44 272,54 292,60" fill="none" stroke="#7a4a22" stroke-width="7" stroke-linecap="round" opacity="0.42"/>
+        <path d="M108,61 C 134,48 168,37 206,39 C 244,41 270,50 288,56" fill="none" stroke="#fff" stroke-width="2.4" stroke-linecap="round" opacity="0.72"/>
+        <path d="M141,138 C 153,172 168,212 188,262" fill="none" stroke="#7a4a22" stroke-width="5" stroke-linecap="round" opacity="0.4"/>
+        <path d="M137,140 C 149,174 164,214 184,264" fill="none" stroke="#fff" stroke-width="1.5" stroke-linecap="round" opacity="0.38"/>
+        <path d="M210,150 C 220,180 225,205 222,235" fill="none" stroke="#7a4a22" stroke-width="3.5" stroke-linecap="round" opacity="0.3"/>
+        <path d="M100,118 C 116,108 128,103 140,97" fill="none" stroke="#7a4a22" stroke-width="3" stroke-linecap="round" opacity="0.28"/>
+        <g fill="none" stroke="#36647d" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round" opacity="0.85">
+          <path d="M150,72 C 175,96 196,120 232,150"/>
+          <path d="M168,62 C 173,92 192,122 212,134"/>
+          <path d="M288,66 C 266,84 248,96 234,150"/>
+          <path d="M170,150 C 148,150 124,146 104,142"/>
+          <path d="M178,188 C 197,206 206,220 217,233"/>
+          <path d="M168,206 C 189,219 199,229 207,239"/>
+        </g>
+      </g>
+    </svg>
+
+    <!-- pins -->
+    <sc-for list="{{ pins }}" as="p" hint-placeholder-count="12">
+      <div style="position:absolute;left:{{ p.x }};top:{{ p.y }};transform:translate(-50%,-100%);display:flex;flex-direction:column;align-items:center;z-index:5;">
+        <sc-if value="{{ p.isNat }}" hint-placeholder-val="{{ true }}">
+          <div style="position:relative;width:30px;height:30px;">
+            <div style="position:absolute;left:6px;top:1px;width:5px;height:5px;border-radius:50%;background:#E8C46A;box-shadow:0 1px 2px rgba(0,0,0,0.3);"></div>
+            <div style="position:absolute;left:7px;top:3px;width:2.4px;height:26px;background:linear-gradient(#E8C46A,#8A4A22);border-radius:2px;"></div>
+            <div style="position:absolute;left:9px;top:3px;width:21px;height:13px;transform-origin:left center;animation:tp-wave 1.6s ease-in-out infinite;overflow:hidden;border-radius:1px;box-shadow:1px 2px 4px rgba(0,0,0,0.3);">
+              <div style="height:34%;background:#FF9933;"></div>
+              <div style="height:33%;background:#fff;position:relative;"><div style="position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:5px;height:5px;border-radius:50%;border:1px solid #122B7A;"></div></div>
+              <div style="height:33%;background:#138808;"></div>
+            </div>
+            <div style="position:absolute;left:4px;bottom:-3px;width:9px;height:3px;border-radius:50%;background:rgba(40,18,10,0.4);filter:blur(0.5px);"></div>
+          </div>
+        </sc-if>
+        <sc-if value="{{ p.isSaf }}" hint-placeholder-val="{{ true }}">
+          <div style="position:relative;width:30px;height:30px;">
+            <div style="position:absolute;left:7px;top:2px;width:2.4px;height:27px;background:linear-gradient(#E8C46A,#8A4A22);border-radius:2px;"></div>
+            <div style="position:absolute;left:9px;top:3px;width:20px;height:13px;background:#E2761B;transform-origin:left center;animation:tp-wave 1.5s ease-in-out infinite;clip-path:polygon(0 0,100% 50%,0 100%);box-shadow:1px 2px 3px rgba(0,0,0,0.25);"></div>
+            <div style="position:absolute;left:5px;bottom:-3px;width:8px;height:3px;border-radius:50%;background:rgba(40,18,10,0.4);filter:blur(0.5px);"></div>
+          </div>
+        </sc-if>
+        <sc-if value="{{ p.pending }}" hint-placeholder-val="{{ true }}">
+          <div style="position:relative;width:14px;height:18px;">
+            <div style="position:absolute;left:0;top:0;width:13px;height:13px;border-radius:50% 50% 50% 0;transform:rotate(-45deg);border:2px solid rgba(74,18,32,0.55);background:rgba(251,244,230,0.82);"></div>
+            <div style="position:absolute;left:4px;bottom:-1px;width:6px;height:2.5px;border-radius:50%;background:rgba(40,18,10,0.35);"></div>
+          </div>
+        </sc-if>
+        <sc-if value="{{ showLabels }}" hint-placeholder-val="{{ true }}">
+          <div style="position:absolute;top:100%;left:50%;transform:translateX(-50%);margin-top:1px;white-space:nowrap;font-family:'Mukta';font-size:7.5px;font-weight:700;color:#4A2418;text-shadow:0 1px 2px rgba(255,250,235,0.95),0 0 3px rgba(255,250,235,0.95);">{{ p.name }}</div>
+        </sc-if>
+      </div>
+    </sc-for>
+  </div>
+
+  <!-- legend -->
+  <div style="display:flex;justify-content:center;gap:16px;margin-top:8px;font-family:'Mukta';font-size:10.5px;color:#6B4A3A;flex-wrap:wrap;padding:0 20px;">
+    <span style="display:flex;align-items:center;gap:6px;"><span style="display:inline-block;width:12px;height:9px;background:linear-gradient(#FF9933 0 34%,#fff 34% 67%,#138808 67% 100%);border-radius:1px;"></span>Planted</span>
+    <span style="display:flex;align-items:center;gap:6px;"><span style="display:inline-block;width:9px;height:9px;border-radius:50% 50% 50% 0;transform:rotate(-45deg);border:2px solid rgba(74,18,32,0.5);"></span>Yet to visit</span>
+    <span style="display:flex;align-items:center;gap:6px;"><span style="display:inline-block;width:14px;height:3px;border-radius:2px;background:#36647d;"></span>Rivers</span>
+    <span style="display:flex;align-items:center;gap:6px;"><span style="display:inline-block;width:14px;height:5px;border-radius:2px;background:linear-gradient(#fff,#7a4a22);"></span>Ranges</span>
+  </div>
+
+  <!-- latest milestone banner -->
+  <div style="margin:16px 20px 22px;background:#6B1A2C;border-radius:18px;padding:16px 18px;display:flex;align-items:center;gap:14px;color:#F5E2C8;">
+    <div style="position:relative;width:78px;height:96px;flex-shrink:0;">
+      <div style="position:absolute;left:7px;top:3px;width:8px;height:8px;border-radius:50%;background:#E8C46A;"></div>
+      <div style="position:absolute;left:9px;top:6px;width:3px;height:84px;background:linear-gradient(#E8C46A,#9A5A2A);border-radius:2px;"></div>
+      <div style="position:absolute;left:12px;top:9px;width:62px;height:42px;transform-origin:left center;animation:tp-wave-lg 2.2s ease-in-out infinite;overflow:hidden;border-radius:1.5px;box-shadow:2px 4px 8px rgba(0,0,0,0.35);">
+        <div style="height:34%;background:#FF9933;"></div>
+        <div style="height:33%;background:#fff;position:relative;"><div style="position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:13px;height:13px;border-radius:50%;border:1.5px solid #122B7A;background:repeating-conic-gradient(#122B7A 0deg 0.7deg,transparent 0.7deg 15deg);"></div></div>
+        <div style="height:33%;background:#138808;"></div>
+      </div>
+    </div>
+    <div style="flex:1;">
+      <div style="font-family:'Mukta';font-size:10px;letter-spacing:0.14em;color:#E8C46A;text-transform:uppercase;">Milestone unlocked</div>
+      <div style="font-family:'Marcellus';font-size:20px;color:#FBF4E6;margin-top:2px;">Omkareshwar planted</div>
+      <div style="font-family:'Mukta';font-size:12px;color:rgba(245,226,200,0.85);margin-top:4px;">Your 4th flag on the map · 22 Mar 2026</div>
+    </div>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:390,&quot;height&quot;:780},&quot;showLabels&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;Map&quot;},&quot;flagStyle&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;National tricolor&quot;,&quot;Saffron pennant&quot;],&quot;default&quot;:&quot;National tricolor&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Map&quot;}}">
+class Component extends DCLogic {
+  renderVals() {
+    const pr = this.props || {};
+    const showLabels = pr.showLabels ?? true;
+    const flagStyle = pr.flagStyle ?? 'National tricolor';
+    const isNat = flagStyle === 'National tricolor';
+    const base = [
+      { name: 'Kedarnath', x: '50%', y: '11%', done: false },
+      { name: 'Kashi Vishwanath', x: '60%', y: '23%', done: true },
+      { name: 'Vaidyanath', x: '67%', y: '27%', done: false },
+      { name: 'Nageshwar', x: '30%', y: '32%', done: false },
+      { name: 'Somnath', x: '35%', y: '35%', done: true },
+      { name: 'Mahakaleshwar', x: '47%', y: '28%', done: true },
+      { name: 'Omkareshwar', x: '46%', y: '33%', done: true },
+      { name: 'Trimbakeshwar', x: '44%', y: '39%', done: false },
+      { name: 'Grishneshwar', x: '50%', y: '38%', done: false },
+      { name: 'Bhimashankar', x: '46%', y: '42%', done: false },
+      { name: 'Mallikarjuna', x: '56%', y: '49%', done: false },
+      { name: 'Rameshwaram', x: '63%', y: '70%', done: false },
+    ];
+    const pins = base.map(o => ({
+      ...o,
+      pending: !o.done,
+      isNat: o.done && isNat,
+      isSaf: o.done && !isNat,
+    }));
+    const slab = [];
+    for (let i = 16; i >= 1; i--) {
+      const t = (i - 1) / 15;
+      const r = Math.round(122 - 74 * t);
+      const g = Math.round(76 - 48 * t);
+      const b = Math.round(42 - 28 * t);
+      slab.push({ off: i, shade: 'rgb(' + r + ',' + g + ',' + b + ')' });
+    }
+    return { pins, showLabels, slab };
+  }
+}
+</script>
+</body>
+</html>

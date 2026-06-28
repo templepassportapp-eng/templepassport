@@ -1,0 +1,26 @@
+#!/bin/sh
+# Apache Maven Wrapper script
+set -e
+
+findMavenHome() {
+  case "`uname`" in
+    CYGWIN*) basedir=`cygpath --windows "$0"`;;
+    *) basedir="$0";;
+  esac
+  basedir=$(dirname "$basedir")
+  echo "$basedir"
+}
+
+MAVEN_PROJECTBASEDIR=$(findMavenHome)
+WRAPPER_JAR="$MAVEN_PROJECTBASEDIR/.mvn/wrapper/maven-wrapper.jar"
+WRAPPER_PROPERTIES="$MAVEN_PROJECTBASEDIR/.mvn/wrapper/maven-wrapper.properties"
+WRAPPER_LAUNCHER=org.apache.maven.wrapper.MavenWrapperMain
+
+if [ -r "$WRAPPER_PROPERTIES" ]; then
+  DISTRIBUTION_URL=$(grep distributionUrl "$WRAPPER_PROPERTIES" | cut -d= -f2-)
+fi
+
+exec "$JAVA_HOME/bin/java" \
+  -classpath "$WRAPPER_JAR" \
+  "-Dmaven.multiModuleProjectDirectory=$MAVEN_PROJECTBASEDIR" \
+  "$WRAPPER_LAUNCHER" "$@"

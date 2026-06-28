@@ -1,0 +1,28 @@
+{
+  "expo": {
+    "name": "Temple Passport",
+    "slug": "temple-passport",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "light",
+    "ios": {
+      "supportsTablet": false
+    },
+    "android": {
+      "adaptiveIcon": {
+        "backgroundColor": "#1a1a2e"
+      }
+    },
+    "plugins": [
+      [
+        "expo-location",
+        {
+          "locationWhenInUsePermission": "Temple Passport needs your location to verify you are near the temple."
+        }
+      ],
+      "expo-font",
+      "expo-secure-store",
+      "@react-native-community/datetimepicker"
+    ]
+  }
+}

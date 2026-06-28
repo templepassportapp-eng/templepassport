@@ -1,0 +1,31 @@
+services:
+  postgres:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_DB: templepassport
+      POSTGRES_USER: templepassport
+      POSTGRES_PASSWORD: templepassport
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U templepassport -d templepassport"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  backend:
+    build: .
+    ports:
+      - "8080:8080"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/templepassport
+      SPRING_DATASOURCE_USERNAME: templepassport
+      SPRING_DATASOURCE_PASSWORD: templepassport
+
+volumes:
+  postgres_data:

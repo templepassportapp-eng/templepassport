@@ -1,0 +1,28 @@
+# Secrets — never commit real values
+.env.prod
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDEs
+.idea/
+.vscode/
+*.iml
+
+# Backend
+backend/target/
+
+# Admin portal
+admin/node_modules/
+admin/dist/
+
+# Mobile
+mobile/node_modules/
+mobile/.expo/
+mobile/dist/
+
+# Temp / logs
+mobile_temp/
+metro.log
+*.log
