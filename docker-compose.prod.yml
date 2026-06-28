@@ -48,7 +48,7 @@ services:
       - backend
     volumes:
       - /opt/temple-passport/nginx/nginx.conf:/etc/nginx/nginx.conf:ro
-      - /opt/temple-passport/admin-dist:/usr/share/nginx/html:ro
+      - /opt/temple-passport/admin-dist:/usr/share/nginx/html/admin:ro
       - /opt/temple-passport/certbot/conf:/etc/letsencrypt:ro
       - /opt/temple-passport/certbot/www:/var/www/certbot:ro
     healthcheck:

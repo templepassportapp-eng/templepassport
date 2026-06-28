@@ -130,7 +130,7 @@ jobs:
           host: ${{ secrets.GCE_HOST }}
           username: ${{ secrets.GCE_USER }}
           key: ${{ secrets.GCE_SSH_KEY }}
-          source: "docker-compose.prod.yml,nginx/nginx.conf,scripts/deploy.sh"
+          source: "docker-compose.prod.yml,nginx/nginx.conf,scripts/deploy.sh,scripts/create-admin.sh"
           target: /opt/temple-passport/
 
       # Copy admin portal static files
@@ -151,5 +151,5 @@ jobs:
           username: ${{ secrets.GCE_USER }}
           key: ${{ secrets.GCE_SSH_KEY }}
           script: |
-            chmod +x /opt/temple-passport/scripts/deploy.sh
+            chmod +x /opt/temple-passport/scripts/deploy.sh /opt/temple-passport/scripts/create-admin.sh
             /opt/temple-passport/scripts/deploy.sh ${{ env.IMAGE_TAG }}

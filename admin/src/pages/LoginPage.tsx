@@ -23,22 +23,11 @@ export default function LoginPage() {
         localStorage.setItem('admin_token', token);
         navigate('/dashboard');
       } else {
-        // Dev bypass — remove once backend admin auth is live
-        if (username === 'admin' && password === 'admin123') {
-          localStorage.setItem('admin_token', 'dev-token');
-          navigate('/dashboard');
-        } else {
-          setError('Invalid credentials');
-        }
+        const data = await res.json().catch(() => ({}));
+        setError(data.error ?? 'Invalid credentials');
       }
     } catch {
-      // Dev bypass — remove once backend admin auth is live
-      if (username === 'admin' && password === 'admin123') {
-        localStorage.setItem('admin_token', 'dev-token');
-        navigate('/dashboard');
-      } else {
-        setError('Could not connect to server. Use admin / admin123 for dev mode.');
-      }
+      setError('Could not connect to server. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -49,7 +38,6 @@ export default function LoginPage() {
       minHeight: '100vh', background: '#3A0E1A',
       display: 'flex', alignItems: 'center', justifyContent: 'center',
     }}>
-      {/* Background pattern */}
       <div style={{
         position: 'absolute', inset: 0, opacity: 0.04,
         backgroundImage: 'repeating-linear-gradient(45deg, #C49A3A 0, #C49A3A 1px, transparent 0, transparent 50%)',
@@ -70,10 +58,10 @@ export default function LoginPage() {
 
         <Form layout="vertical" onFinish={onFinish} requiredMark={false}>
           <Form.Item name="username" label="Username" rules={[{ required: true }]}>
-            <Input size="large" placeholder="admin" autoComplete="username" />
+            <Input size="large" autoComplete="username" />
           </Form.Item>
           <Form.Item name="password" label="Password" rules={[{ required: true }]}>
-            <Input.Password size="large" placeholder="••••••••" autoComplete="current-password" />
+            <Input.Password size="large" autoComplete="current-password" />
           </Form.Item>
           <Form.Item style={{ marginBottom: 0 }}>
             <Button
@@ -85,10 +73,6 @@ export default function LoginPage() {
             </Button>
           </Form.Item>
         </Form>
-
-        <Text type="secondary" style={{ display: 'block', textAlign: 'center', marginTop: 20, fontSize: 12 }}>
-          Dev mode: admin / admin123
-        </Text>
       </Card>
     </div>
   );
