@@ -52,7 +52,7 @@ $COMPOSE up -d --no-deps --no-build backend
 # ── Health check ─────────────────────────────────────────────────────────────
 
 echo "[deploy] Waiting for backend to become healthy..."
-MAX_RETRIES=18   # 18 × 10s = 3 minutes
+MAX_RETRIES=42   # 42 × 10s = 7 minutes
 RETRY=0
 STATUS="starting"
 
