@@ -33,6 +33,7 @@ echo "    Docker $(docker --version) installed."
 
 echo "==> [2/6] Creating app directory structure..."
 mkdir -p $APP_DIR/nginx
+mkdir -p $APP_DIR/homepage
 mkdir -p $APP_DIR/admin-dist
 mkdir -p $APP_DIR/scripts
 mkdir -p $APP_DIR/certbot/conf

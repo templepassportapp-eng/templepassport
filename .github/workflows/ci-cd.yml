@@ -133,6 +133,16 @@ jobs:
           source: "docker-compose.prod.yml,nginx/nginx.conf,scripts/deploy.sh,scripts/create-admin.sh"
           target: /opt/temple-passport/
 
+      # Copy homepage static files
+      - name: Copy homepage to GCE
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.GCE_HOST }}
+          username: ${{ secrets.GCE_USER }}
+          key: ${{ secrets.GCE_SSH_KEY }}
+          source: "homepage/"
+          target: /opt/temple-passport/
+
       # Copy admin portal static files
       - name: Copy admin dist to GCE
         uses: appleboy/scp-action@v0.1.7
