@@ -24,6 +24,10 @@ echo "[dev-deploy] Pulling $IMAGE:dev ..."
 gcloud auth configure-docker $REGISTRY --quiet
 docker pull "$IMAGE:dev"
 
+echo "[dev-deploy] Ensuring postgres is running..."
+$COMPOSE up -d --no-build postgres
+sleep 5
+
 echo "[dev-deploy] Restarting backend..."
 $COMPOSE up -d --no-deps --no-build backend
 
