@@ -6,22 +6,27 @@ import com.templepassport.model.User;
 import com.templepassport.repository.OtpSessionRepository;
 import com.templepassport.repository.UserRepository;
 import com.templepassport.util.JwtUtil;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.security.SecureRandom;
 import java.time.LocalDateTime;
-import java.util.Random;
 import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/auth")
-@CrossOrigin
 public class AuthController {
+
+    private static final int MAX_OTP_ATTEMPTS = 5;
 
     private final OtpSessionRepository otpRepo;
     private final UserRepository userRepo;
     private final JwtUtil jwtUtil;
-    private final Random random = new Random();
+    private final SecureRandom random = new SecureRandom();
+
+    @Value("${app.dev-mode:false}")
+    private boolean devMode;
 
     public AuthController(OtpSessionRepository otpRepo, UserRepository userRepo, JwtUtil jwtUtil) {
         this.otpRepo = otpRepo;
@@ -36,11 +41,9 @@ public class AuthController {
             return ResponseEntity.badRequest().build();
         }
 
-        // Clean up any existing OTPs for this phone
         otpRepo.deleteByPhone(phone);
         otpRepo.deleteExpired(LocalDateTime.now());
 
-        // Generate 6-digit code
         String code = String.format("%06d", random.nextInt(1_000_000));
 
         OtpSession session = new OtpSession();
@@ -49,8 +52,9 @@ public class AuthController {
         session.setExpiresAt(LocalDateTime.now().plusMinutes(10));
         otpRepo.save(session);
 
-        // In dev mode: return the code in the response so it can be used without real SMS
-        return ResponseEntity.ok(new SendOtpResponse("OTP sent to " + phone, code));
+        // Only return the code in dev mode — in prod, SMS would be sent here
+        String devCode = devMode ? code : null;
+        return ResponseEntity.ok(new SendOtpResponse("OTP sent to " + phone, devCode));
     }
 
     @PostMapping("/verify-otp")
@@ -60,23 +64,32 @@ public class AuthController {
             return ResponseEntity.badRequest().build();
         }
 
-        OtpSession session = otpRepo.findByPhoneAndCode(phone, req.code())
-                .orElse(null);
+        OtpSession session = otpRepo.findByPhone(phone).orElse(null);
 
         if (session == null || session.getExpiresAt().isBefore(LocalDateTime.now())) {
             return ResponseEntity.status(401).build();
         }
 
+        if (session.getAttempts() >= MAX_OTP_ATTEMPTS) {
+            otpRepo.delete(session);
+            return ResponseEntity.status(429).build();
+        }
+
+        if (!session.getCode().equals(req.code())) {
+            session.setAttempts(session.getAttempts() + 1);
+            otpRepo.save(session);
+            return ResponseEntity.status(401).build();
+        }
+
         otpRepo.delete(session);
 
-        // Find or create user
         boolean isNewUser = false;
         User user = userRepo.findByPhone(phone).orElse(null);
         if (user == null) {
             user = new User();
             user.setId(UUID.randomUUID());
             user.setPhone(phone);
-            user.setName(phone); // placeholder — user can update profile name later
+            user.setName(phone);
             user.setCreatedAt(LocalDateTime.now());
             userRepo.save(user);
             isNewUser = true;
@@ -89,7 +102,6 @@ public class AuthController {
     private String normalizePhone(String raw) {
         if (raw == null) return null;
         String digits = raw.replaceAll("[^0-9]", "");
-        // Accept 10-digit Indian numbers, optionally with +91 prefix
         if (digits.length() == 10) return "+91" + digits;
         if (digits.length() == 12 && digits.startsWith("91")) return "+" + digits;
         if (digits.length() == 13 && digits.startsWith("91")) return "+" + digits.substring(1);

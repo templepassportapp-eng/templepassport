@@ -14,7 +14,7 @@ import java.util.UUID;
 @Component
 public class JwtUtil {
 
-    @Value("${jwt.secret:temple-passport-secret-key-must-be-32-chars!!}")
+    @Value("${jwt.secret}")
     private String secret;
 
     private static final long EXPIRY_MS = 30L * 24 * 60 * 60 * 1000; // 30 days
