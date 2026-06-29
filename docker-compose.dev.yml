@@ -24,12 +24,15 @@ services:
         condition: service_healthy
     expose:
       - "8080"
+    volumes:
+      - /opt/temple-passport/firebase-adminsdk.json:/opt/firebase-adminsdk.json:ro
     environment:
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/templepassport
       SPRING_DATASOURCE_USERNAME: templepassport
       SPRING_DATASOURCE_PASSWORD: ${DB_PASSWORD}
       JWT_SECRET: ${JWT_SECRET}
       FIREBASE_PROJECT_ID: ${FIREBASE_PROJECT_ID:-temple-passport-30183}
+      GOOGLE_APPLICATION_CREDENTIALS: /opt/firebase-adminsdk.json
       # Enable OTP in response for dev — safe because this VM is not prod
       SPRING_APPLICATION_JSON: '{"app":{"dev-mode":true}}'
       # Tighter memory for free e2-micro (1 GB RAM total)
