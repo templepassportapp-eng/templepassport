@@ -1,12 +1,13 @@
 #!/bin/bash
-# Creates or updates an admin user in the production database.
+# Creates or updates an admin user in the database.
 # Run on the GCE VM after first deploy (or any time you need to reset a password).
 #
-# Usage: bash /opt/temple-passport/scripts/create-admin.sh <username>
+# Usage: bash /opt/temple-passport/scripts/create-admin.sh <username> [dev|prod]
 
 set -euo pipefail
 
-USERNAME=${1:?Usage: create-admin.sh <username>}
+USERNAME=${1:?Usage: create-admin.sh <username> [dev|prod]}
+ENV=${2:-prod}
 APP_DIR=/opt/temple-passport
 
 echo -n "Password for '$USERNAME': "
@@ -43,12 +44,22 @@ EOF
 # Escape single quotes in username for SQL safety
 USERNAME_SQL=$(printf "%s" "$USERNAME" | sed "s/'/''/g")
 
-docker compose --env-file "$APP_DIR/.env.prod" \
-  -f "$APP_DIR/docker-compose.prod.yml" exec -T postgres \
+if [ "$ENV" = "dev" ]; then
+  ENV_FILE="$APP_DIR/.env.dev"
+  COMPOSE_FILE="$APP_DIR/docker-compose.dev.yml"
+  LOGIN_URL="https://dev.templepassport.in/admin/login"
+else
+  ENV_FILE="$APP_DIR/.env.prod"
+  COMPOSE_FILE="$APP_DIR/docker-compose.prod.yml"
+  LOGIN_URL="https://templepassport.in/admin/login"
+fi
+
+docker compose --env-file "$ENV_FILE" \
+  -f "$COMPOSE_FILE" exec -T postgres \
   psql -U templepassport -d templepassport -c \
   "INSERT INTO admin_users (username, password_hash, name)
    VALUES ('$USERNAME_SQL', '$HASH', '$USERNAME_SQL')
    ON CONFLICT (username) DO UPDATE SET password_hash = EXCLUDED.password_hash;"
 
 echo ""
-echo "Admin user '$USERNAME' created. Log in at https://templepassport.in/admin/login"
+echo "Admin user '$USERNAME' created. Log in at $LOGIN_URL"
