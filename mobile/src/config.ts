@@ -1,4 +1,4 @@
-export const API_BASE_URL = 'http://192.168.0.4:8080/api';
+export const API_BASE_URL = process.env.EXPO_PUBLIC_API_BASE_URL ?? 'http://192.168.0.4:8080/api';
 
 // Placeholder identity until Google OAuth is wired in (M1).
 // Matches the dev user seeded by backend migration V3.

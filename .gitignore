@@ -1,5 +1,6 @@
 # Secrets — never commit real values
 .env.prod
+mobile/.env.local
 
 # OS
 .DS_Store
