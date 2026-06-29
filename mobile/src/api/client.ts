@@ -53,12 +53,7 @@ export async function updateProfile(userId: string, body: {name: string; city: s
   await api.patch(`/users/${userId}/profile`, body);
 }
 
-export async function sendOtp(phone: string): Promise<{message: string; devCode: string}> {
-  const {data} = await api.post('/auth/send-otp', {phone});
-  return data;
-}
-
-export async function verifyOtp(phone: string, code: string): Promise<{token: string; userId: string; phone: string; name: string; isNewUser: boolean}> {
-  const {data} = await api.post('/auth/verify-otp', {phone, code});
+export async function firebaseVerify(idToken: string): Promise<{token: string; userId: string; phone: string; name: string; isNewUser: boolean}> {
+  const {data} = await api.post('/auth/firebase-verify', {idToken});
   return data;
 }

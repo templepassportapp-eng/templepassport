@@ -29,6 +29,7 @@ services:
       SPRING_DATASOURCE_USERNAME: templepassport
       SPRING_DATASOURCE_PASSWORD: ${DB_PASSWORD}
       JWT_SECRET: ${JWT_SECRET}
+      FIREBASE_PROJECT_ID: ${FIREBASE_PROJECT_ID:-temple-passport-30183}
       # Enable OTP in response for dev — safe because this VM is not prod
       SPRING_APPLICATION_JSON: '{"app":{"dev-mode":true}}'
       # Tighter memory for free e2-micro (1 GB RAM total)

@@ -21,6 +21,9 @@ jwt:
 app:
   dev-mode: true
 
+firebase:
+  project-id: ${FIREBASE_PROJECT_ID:temple-passport-30183}
+
 server:
   port: 8080
 

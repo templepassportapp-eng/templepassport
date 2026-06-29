@@ -17,4 +17,6 @@ public class AuthDtos {
             String name,
             boolean isNewUser
     ) {}
+
+    public record FirebaseVerifyRequest(String idToken) {}
 }

@@ -1,5 +1,8 @@
 package com.templepassport.controller;
 
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseAuthException;
+import com.google.firebase.auth.FirebaseToken;
 import com.templepassport.dto.AuthDtos.*;
 import com.templepassport.model.OtpSession;
 import com.templepassport.model.User;
@@ -82,6 +85,36 @@ public class AuthController {
         }
 
         otpRepo.delete(session);
+
+        boolean isNewUser = false;
+        User user = userRepo.findByPhone(phone).orElse(null);
+        if (user == null) {
+            user = new User();
+            user.setId(UUID.randomUUID());
+            user.setPhone(phone);
+            user.setName(phone);
+            user.setCreatedAt(LocalDateTime.now());
+            userRepo.save(user);
+            isNewUser = true;
+        }
+
+        String token = jwtUtil.generateToken(user.getId(), phone);
+        return ResponseEntity.ok(new VerifyOtpResponse(token, user.getId(), phone, user.getName(), isNewUser));
+    }
+
+    @PostMapping("/firebase-verify")
+    public ResponseEntity<VerifyOtpResponse> firebaseVerify(@RequestBody FirebaseVerifyRequest req) {
+        FirebaseToken decoded;
+        try {
+            decoded = FirebaseAuth.getInstance().verifyIdToken(req.idToken());
+        } catch (FirebaseAuthException e) {
+            return ResponseEntity.status(401).build();
+        }
+
+        String phone = (String) decoded.getClaims().get("phone_number");
+        if (phone == null) {
+            return ResponseEntity.status(401).build();
+        }
 
         boolean isNewUser = false;
         User user = userRepo.findByPhone(phone).orElse(null);
