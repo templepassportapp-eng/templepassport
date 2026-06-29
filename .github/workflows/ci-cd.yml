@@ -2,7 +2,7 @@ name: CI/CD
 
 on:
   push:
-    branches: [main]
+    branches: [main, dev]
   pull_request:
     branches: [main]
 
@@ -75,7 +75,85 @@ jobs:
           path: admin/dist/
           retention-days: 1
 
-  # ── Job 3: Build image + deploy (main only) ─────────────────────────────────
+  # ── Job 3: Build image + deploy to dev (dev branch only) ───────────────────
+  deploy-dev:
+    name: Deploy to Dev VM
+    needs: [test-backend, build-admin]
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/dev' && github.event_name == 'push'
+    permissions:
+      contents: read
+      id-token: write
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Authenticate to GCP
+        uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: ${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER }}
+          service_account: ${{ secrets.GCP_SERVICE_ACCOUNT }}
+
+      - name: Set up Cloud SDK
+        uses: google-github-actions/setup-gcloud@v2
+
+      - name: Configure Docker for Artifact Registry
+        run: gcloud auth configure-docker ${{ env.REGISTRY }} --quiet
+
+      - name: Build and push backend image (dev tag)
+        run: |
+          IMAGE=${{ env.REGISTRY }}/${{ secrets.GCP_PROJECT_ID }}/temple-passport/${{ env.IMAGE_NAME }}
+          docker build \
+            --platform linux/amd64 \
+            --cache-from $IMAGE:dev \
+            -t $IMAGE:dev \
+            ./backend
+          docker push $IMAGE:dev
+
+      - name: Download admin dist
+        uses: actions/download-artifact@v4
+        with:
+          name: admin-dist
+          path: admin-dist/
+
+      - name: Copy infra files to dev VM
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.DEV_GCE_HOST }}
+          username: ${{ secrets.DEV_GCE_USER }}
+          key: ${{ secrets.DEV_GCE_SSH_KEY }}
+          source: "docker-compose.dev.yml,nginx/nginx.dev.conf,scripts/deploy.dev.sh,scripts/create-admin.sh"
+          target: /opt/temple-passport/
+
+      - name: Copy homepage to dev VM
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.DEV_GCE_HOST }}
+          username: ${{ secrets.DEV_GCE_USER }}
+          key: ${{ secrets.DEV_GCE_SSH_KEY }}
+          source: "homepage/"
+          target: /opt/temple-passport/
+
+      - name: Copy admin dist to dev VM
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.DEV_GCE_HOST }}
+          username: ${{ secrets.DEV_GCE_USER }}
+          key: ${{ secrets.DEV_GCE_SSH_KEY }}
+          source: "admin-dist/"
+          target: /opt/temple-passport/
+
+      - name: Deploy to dev
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.DEV_GCE_HOST }}
+          username: ${{ secrets.DEV_GCE_USER }}
+          key: ${{ secrets.DEV_GCE_SSH_KEY }}
+          script: |
+            chmod +x /opt/temple-passport/scripts/deploy.dev.sh /opt/temple-passport/scripts/create-admin.sh
+            /opt/temple-passport/scripts/deploy.dev.sh
+
+  # ── Job 4: Build image + deploy to prod (main only) ─────────────────────────
   deploy:
     name: Deploy to GCE
     needs: [test-backend, build-admin]
