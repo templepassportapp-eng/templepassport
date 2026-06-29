@@ -28,6 +28,9 @@ public class User {
     @Column(name = "state_name")
     private String stateName;
 
+    @Column(name = "date_of_birth")
+    private java.time.LocalDate dateOfBirth;
+
     @Column(name = "created_at")
     private java.time.LocalDateTime createdAt;
 
@@ -44,6 +47,8 @@ public class User {
     public void setPhone(String phone) { this.phone = phone; }
     public String getProfilePictureUrl() { return profilePictureUrl; }
     public void setProfilePictureUrl(String profilePictureUrl) { this.profilePictureUrl = profilePictureUrl; }
+    public java.time.LocalDate getDateOfBirth() { return dateOfBirth; }
+    public void setDateOfBirth(java.time.LocalDate dateOfBirth) { this.dateOfBirth = dateOfBirth; }
     public java.time.LocalDateTime getCreatedAt() { return createdAt; }
     public void setCreatedAt(java.time.LocalDateTime createdAt) { this.createdAt = createdAt; }
     public String getCity() { return city; }

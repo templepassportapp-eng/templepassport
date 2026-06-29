@@ -49,8 +49,16 @@ export async function getUserCollections(userId: string): Promise<CollectionDeta
   return data;
 }
 
-export async function updateProfile(userId: string, body: {name: string; city: string; state?: string}): Promise<void> {
+export async function updateProfile(userId: string, body: {name: string; city: string; state?: string; dob?: string}): Promise<void> {
   await api.patch(`/users/${userId}/profile`, body);
+}
+
+export async function uploadAvatar(userId: string, formData: FormData): Promise<{url: string}> {
+  const {data} = await api.post<{url: string}>(`/users/${userId}/avatar`, formData, {
+    headers: {'Content-Type': 'multipart/form-data'},
+    timeout: 30000,
+  });
+  return data;
 }
 
 export async function firebaseVerify(idToken: string): Promise<{token: string; userId: string; phone: string; name: string; isNewUser: boolean}> {

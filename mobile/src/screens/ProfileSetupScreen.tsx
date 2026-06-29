@@ -1,12 +1,14 @@
 import React, {useState} from 'react';
 import {
-  ActivityIndicator, Alert, KeyboardAvoidingView, Modal, Platform,
+  ActivityIndicator, Alert, Image, KeyboardAvoidingView, Modal, Platform,
   ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View,
 } from 'react-native';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import * as ImagePicker from 'expo-image-picker';
+import {manipulateAsync, SaveFormat} from 'expo-image-manipulator';
 import Svg, {Circle, Path, Rect} from 'react-native-svg';
-import {updateProfile} from '../api/client';
+import {updateProfile, uploadAvatar} from '../api/client';
 import {useAuth} from '../auth/AuthContext';
 import {useLang} from '../i18n/LanguageContext';
 import {colors, fonts, radius, spacing} from '../theme';
@@ -15,6 +17,10 @@ const MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov
 
 function formatDate(d: Date): string {
   return `${String(d.getDate()).padStart(2,'0')}-${MONTHS[d.getMonth()]}-${d.getFullYear()}`;
+}
+
+function toIsoDate(d: Date): string {
+  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
 }
 
 async function lookupPincode(pin: string): Promise<{city: string; state: string} | null> {
@@ -43,6 +49,7 @@ export default function ProfileSetupScreen({onDone}: Props) {
   const [pincode, setPincode]     = useState('');
   const [city, setCity]           = useState('');
   const [state, setState]         = useState('');
+  const [avatarUri, setAvatarUri] = useState<string | null>(null);
   const [pincodeLoading, setPincodeLoading] = useState(false);
   const [pincodeError, setPincodeError]     = useState('');
   const [busy, setBusy]           = useState(false);
@@ -71,6 +78,34 @@ export default function ProfileSetupScreen({onDone}: Props) {
     }
   };
 
+  const handlePickAvatar = async () => {
+    const {status} = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (status !== 'granted') {
+      Alert.alert('Permission needed', 'Please allow photo access to set a profile picture.');
+      return;
+    }
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ['images'],
+      quality: 1,
+    });
+    if (result.canceled) return;
+
+    const asset = result.assets[0];
+    const size = Math.min(asset.width, asset.height);
+    const originX = (asset.width  - size) / 2;
+    const originY = (asset.height - size) / 2;
+
+    const processed = await manipulateAsync(
+      asset.uri,
+      [
+        {crop: {originX, originY, width: size, height: size}},
+        {resize: {width: 512, height: 512}},
+      ],
+      {compress: 0.8, format: SaveFormat.JPEG},
+    );
+    setAvatarUri(processed.uri);
+  };
+
   const handleSave = async () => {
     if (!name.trim()) {
       Alert.alert(t('nameRequired'), t('nameRequiredMsg'));
@@ -83,7 +118,14 @@ export default function ProfileSetupScreen({onDone}: Props) {
           name:  name.trim(),
           city:  city.trim(),
           state: state.trim(),
+          dob:   date ? toIsoDate(date) : undefined,
         });
+
+        if (avatarUri) {
+          const formData = new FormData();
+          formData.append('file', {uri: avatarUri, type: 'image/jpeg', name: 'avatar.jpg'} as any);
+          await uploadAvatar(user.userId, formData);
+        }
       }
       await AsyncStorage.setItem('tp_profile_done', '1');
       onDone();
@@ -108,16 +150,20 @@ export default function ProfileSetupScreen({onDone}: Props) {
         <Text style={styles.sub}>{t('setupSub')}</Text>
 
         {/* Avatar */}
-        <View style={styles.avatarWrap}>
-          <View style={styles.avatarCircle}>
-            <Svg width="90" height="90" viewBox="0 0 90 90">
-              <Circle cx="45" cy="45" r="45" fill={colors.cream2} />
-              {[...Array(8)].map((_, i) => (
-                <Rect key={i} x={-90} y={i * 14 - 10} width="270" height="7"
-                  fill={colors.gold} opacity="0.20" transform="rotate(-30 45 45)" />
-              ))}
-            </Svg>
-          </View>
+        <TouchableOpacity style={styles.avatarWrap} onPress={handlePickAvatar} activeOpacity={0.8}>
+          {avatarUri ? (
+            <Image source={{uri: avatarUri}} style={styles.avatarImage} />
+          ) : (
+            <View style={styles.avatarCircle}>
+              <Svg width="90" height="90" viewBox="0 0 90 90">
+                <Circle cx="45" cy="45" r="45" fill={colors.cream2} />
+                {[...Array(8)].map((_, i) => (
+                  <Rect key={i} x={-90} y={i * 14 - 10} width="270" height="7"
+                    fill={colors.gold} opacity="0.20" transform="rotate(-30 45 45)" />
+                ))}
+              </Svg>
+            </View>
+          )}
           <View style={styles.cameraBadge}>
             <Svg width="16" height="16" viewBox="0 0 24 24" fill="none">
               <Rect x="2" y="7" width="20" height="14" rx="2" fill={colors.cream} />
@@ -125,7 +171,7 @@ export default function ProfileSetupScreen({onDone}: Props) {
               <Path d="M9 7l1.5-3h3L15 7" stroke={colors.cream} strokeWidth="1.5" strokeLinejoin="round" />
             </Svg>
           </View>
-        </View>
+        </TouchableOpacity>
 
         {/* Full name */}
         <FieldLabel label={t('fullName')} />
@@ -135,6 +181,7 @@ export default function ProfileSetupScreen({onDone}: Props) {
           placeholderTextColor={colors.muted}
           value={name}
           onChangeText={setName}
+          maxLength={60}
           returnKeyType="next"
           autoFocus
         />
@@ -157,7 +204,6 @@ export default function ProfileSetupScreen({onDone}: Props) {
           </Svg>
         </TouchableOpacity>
 
-        {/* Android date picker */}
         {showPicker && Platform.OS === 'android' && (
           <DateTimePicker
             value={date ?? new Date(1992, 7, 14)}
@@ -170,7 +216,6 @@ export default function ProfileSetupScreen({onDone}: Props) {
           />
         )}
 
-        {/* iOS date picker — bottom modal */}
         {Platform.OS === 'ios' && (
           <Modal
             visible={showPicker}
@@ -202,7 +247,7 @@ export default function ProfileSetupScreen({onDone}: Props) {
           </Modal>
         )}
 
-        {/* Pincode → auto-fill city + state */}
+        {/* Pincode */}
         <FieldLabel label="PINCODE" />
         <View style={styles.pincodeRow}>
           <TextInput
@@ -223,7 +268,7 @@ export default function ProfileSetupScreen({onDone}: Props) {
           <Text style={styles.pincodeError}>{pincodeError}</Text>
         )}
 
-        {/* City — auto-filled, editable */}
+        {/* City */}
         <FieldLabel label={t('city')} />
         <TextInput
           style={[styles.input, city && styles.inputFilled]}
@@ -231,10 +276,11 @@ export default function ProfileSetupScreen({onDone}: Props) {
           placeholderTextColor={colors.muted}
           value={city}
           onChangeText={setCity}
+          maxLength={60}
           returnKeyType="next"
         />
 
-        {/* State — auto-filled, editable */}
+        {/* State */}
         <FieldLabel label="STATE" />
         <TextInput
           style={[styles.input, state && styles.inputFilled]}
@@ -242,6 +288,7 @@ export default function ProfileSetupScreen({onDone}: Props) {
           placeholderTextColor={colors.muted}
           value={state}
           onChangeText={setState}
+          maxLength={60}
           returnKeyType="done"
           onSubmitEditing={handleSave}
         />
@@ -276,6 +323,7 @@ const styles = StyleSheet.create({
   sub:   {fontFamily: fonts.body,    fontSize: 13, color: colors.muted, marginBottom: spacing.xl},
 
   avatarWrap:   {alignSelf: 'center', marginBottom: spacing.xl, position: 'relative'},
+  avatarImage:  {width: 90, height: 90, borderRadius: 45},
   avatarCircle: {width: 90, height: 90, borderRadius: 45, overflow: 'hidden', backgroundColor: colors.cream2},
   cameraBadge:  {
     position: 'absolute', bottom: 2, right: 2,
@@ -296,11 +344,8 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.md, paddingVertical: 14,
     fontFamily: fonts.body, fontSize: 15, color: colors.ink,
   },
-  inputFilled: {
-    borderColor: colors.maroon, color: colors.ink,
-  },
+  inputFilled: {borderColor: colors.maroon},
 
-  // Date row
   inputRow: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
     borderWidth: 1.5, borderColor: colors.inkTint16, borderRadius: radius.md,
@@ -311,7 +356,6 @@ const styles = StyleSheet.create({
   dateTextFilled:      {fontFamily: fonts.bodyMedium, fontSize: 15, color: colors.ink, flex: 1},
   dateTextPlaceholder: {fontFamily: fonts.body,       fontSize: 15, color: colors.muted, flex: 1},
 
-  // Pincode
   pincodeRow:    {flexDirection: 'row', alignItems: 'center'},
   pincodeInput:  {flex: 1, letterSpacing: 3},
   pincodeSpinner:{marginLeft: spacing.sm},
@@ -324,7 +368,6 @@ const styles = StyleSheet.create({
   btnDisabled: {opacity: 0.45},
   btnText:     {fontFamily: fonts.display, fontSize: 16, color: colors.cream},
 
-  // iOS modal
   modalBackdrop: {flex: 1, justifyContent: 'flex-end', backgroundColor: 'rgba(0,0,0,0.35)'},
   modalSheet: {
     backgroundColor: colors.cream,

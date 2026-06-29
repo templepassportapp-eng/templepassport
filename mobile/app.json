@@ -10,6 +10,7 @@
     },
     "android": {
       "package": "in.templepassport.app",
+      "googleServicesFile": "./google-services.json",
       "adaptiveIcon": {
         "backgroundColor": "#1a1a2e"
       }
@@ -17,6 +18,12 @@
     "plugins": [
       "@react-native-firebase/app",
       "@react-native-firebase/auth",
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "Temple Passport needs access to your photos to set a profile picture."
+        }
+      ],
       [
         "expo-location",
         {
