@@ -13,6 +13,8 @@ import java.util.UUID;
 
 public interface OtpSessionRepository extends JpaRepository<OtpSession, UUID> {
 
+    Optional<OtpSession> findByPhone(String phone);
+
     Optional<OtpSession> findByPhoneAndCode(String phone, String code);
 
     @Modifying

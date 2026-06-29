@@ -15,6 +15,15 @@ spring:
     enabled: true
     locations: classpath:db/migration
 
+jwt:
+  secret: dev-local-secret-key-for-local-dev-only!!
+
+app:
+  dev-mode: true
+
+firebase:
+  project-id: ${FIREBASE_PROJECT_ID:temple-passport-30183}
+
 server:
   port: 8080
 

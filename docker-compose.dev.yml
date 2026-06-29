@@ -13,12 +13,11 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
-    # Not exposed externally — backend connects via Docker network
     expose:
       - "5432"
 
   backend:
-    image: asia-south1-docker.pkg.dev/${GCP_PROJECT_ID}/temple-passport/backend:${IMAGE_TAG:-latest}
+    image: asia-south1-docker.pkg.dev/${GCP_PROJECT_ID}/temple-passport/backend:${IMAGE_TAG:-dev}
     restart: unless-stopped
     depends_on:
       postgres:
@@ -34,7 +33,10 @@ services:
       JWT_SECRET: ${JWT_SECRET}
       FIREBASE_PROJECT_ID: ${FIREBASE_PROJECT_ID:-temple-passport-30183}
       GOOGLE_APPLICATION_CREDENTIALS: /opt/firebase-adminsdk.json
-      JAVA_TOOL_OPTIONS: "-Xmx320m -Xms128m"
+      # Enable OTP in response for dev — safe because this VM is not prod
+      SPRING_APPLICATION_JSON: '{"app":{"dev-mode":true}}'
+      # Tighter memory for free e2-micro (1 GB RAM total)
+      JAVA_TOOL_OPTIONS: "-Xmx256m -Xms96m"
     healthcheck:
       test: ["CMD-SHELL", "wget -qO- http://localhost:8080/actuator/health | grep -q 'UP' || exit 1"]
       interval: 30s
@@ -51,7 +53,7 @@ services:
     depends_on:
       - backend
     volumes:
-      - /opt/temple-passport/nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - /opt/temple-passport/nginx/nginx.dev.conf:/etc/nginx/nginx.conf:ro
       - /opt/temple-passport/homepage:/usr/share/nginx/html/homepage:ro
       - /opt/temple-passport/admin-dist:/usr/share/nginx/html/admin:ro
       - /opt/temple-passport/certbot/conf:/etc/letsencrypt:ro

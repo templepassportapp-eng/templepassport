@@ -24,6 +24,9 @@ public class OtpSession {
     @Column(name = "created_at")
     private LocalDateTime createdAt = LocalDateTime.now();
 
+    @Column(nullable = false)
+    private int attempts = 0;
+
     public UUID getId() { return id; }
     public String getPhone() { return phone; }
     public void setPhone(String phone) { this.phone = phone; }
@@ -31,4 +34,6 @@ public class OtpSession {
     public void setCode(String code) { this.code = code; }
     public LocalDateTime getExpiresAt() { return expiresAt; }
     public void setExpiresAt(LocalDateTime expiresAt) { this.expiresAt = expiresAt; }
+    public int getAttempts() { return attempts; }
+    public void setAttempts(int attempts) { this.attempts = attempts; }
 }

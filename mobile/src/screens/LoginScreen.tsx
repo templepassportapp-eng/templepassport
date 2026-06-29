@@ -1,9 +1,10 @@
+import auth, {FirebaseAuthTypes} from '@react-native-firebase/auth';
 import React, {useEffect, useRef, useState} from 'react';
 import {
   ActivityIndicator, Alert, KeyboardAvoidingView, Platform,
   StyleSheet, Text, TextInput, TouchableOpacity, View,
 } from 'react-native';
-import {sendOtp, verifyOtp} from '../api/client';
+import {firebaseVerify} from '../api/client';
 import {useAuth} from '../auth/AuthContext';
 import TempleGlyph from '../components/TempleGlyph';
 import {useLang} from '../i18n/LanguageContext';
@@ -13,13 +14,13 @@ export default function LoginScreen() {
   const {login} = useAuth();
   const {t}     = useLang();
 
-  const [step, setStep]             = useState<'phone' | 'otp'>('phone');
-  const [phone, setPhone]           = useState('');
-  const [otp, setOtp]               = useState('');
-  const [devCode, setDevCode]       = useState('');
-  const [busy, setBusy]             = useState(false);
-  const [countdown, setCountdown]   = useState(0);
-  const [keepSigned, setKeepSigned] = useState(true);
+  const [step, setStep]                   = useState<'phone' | 'otp'>('phone');
+  const [phone, setPhone]                 = useState('');
+  const [otp, setOtp]                     = useState('');
+  const [busy, setBusy]                   = useState(false);
+  const [countdown, setCountdown]         = useState(0);
+  const [keepSigned, setKeepSigned]       = useState(true);
+  const [confirmation, setConfirmation]   = useState<FirebaseAuthTypes.ConfirmationResult | null>(null);
 
   const phoneRef = useRef<TextInput>(null);
   const otpRef   = useRef<TextInput>(null);
@@ -27,7 +28,7 @@ export default function LoginScreen() {
 
   useEffect(() => {
     if (step === 'otp') {
-      setCountdown(24);
+      setCountdown(30);
       timerRef.current = setInterval(() => {
         setCountdown(s => {
           if (s <= 1) { clearInterval(timerRef.current!); return 0; }
@@ -53,8 +54,8 @@ export default function LoginScreen() {
     }
     setBusy(true);
     try {
-      const res = await sendOtp(digits);
-      setDevCode(res.devCode);
+      const result = await auth().signInWithPhoneNumber('+91' + digits);
+      setConfirmation(result);
       setOtp('');
       setStep('otp');
       setTimeout(() => otpRef.current?.focus(), 400);
@@ -66,10 +67,12 @@ export default function LoginScreen() {
   };
 
   const handleVerifyOtp = async () => {
-    if (otp.length !== 6) return;
+    if (!confirmation || otp.length !== 6) return;
     setBusy(true);
     try {
-      const res = await verifyOtp(phone.replace(/\D/g, ''), otp);
+      const result = await confirmation.confirm(otp);
+      const idToken = await result!.user.getIdToken();
+      const res = await firebaseVerify(idToken);
       await login(res.token, {userId: res.userId, phone: res.phone, name: res.name}, res.isNewUser);
     } catch {
       Alert.alert(t('incorrectCode'), t('incorrectCodeMsg'));
@@ -158,7 +161,7 @@ export default function LoginScreen() {
 
       <TouchableOpacity
         style={styles.backBtn}
-        onPress={() => { setStep('phone'); setOtp(''); }}>
+        onPress={() => { setStep('phone'); setOtp(''); setConfirmation(null); }}>
         <Text style={styles.backArrow}>‹</Text>
       </TouchableOpacity>
 
@@ -169,7 +172,7 @@ export default function LoginScreen() {
         {'  '}
         <Text
           style={styles.editLink}
-          onPress={() => { setStep('phone'); setOtp(''); }}>
+          onPress={() => { setStep('phone'); setOtp(''); setConfirmation(null); }}>
           {t('edit')}
         </Text>
       </Text>
@@ -207,16 +210,6 @@ export default function LoginScreen() {
         caretHidden
         autoFocus
       />
-
-      {/* Dev hint — tap to auto-fill */}
-      {devCode !== '' && (
-        <TouchableOpacity
-          onPress={() => setOtp(devCode)}
-          activeOpacity={0.7}
-          style={styles.devHintWrap}>
-          <Text style={styles.devHint}>DEV: tap to fill → {devCode}</Text>
-        </TouchableOpacity>
-      )}
 
       {/* Resend countdown */}
       <View style={styles.resendRow}>
@@ -337,9 +330,6 @@ const styles = StyleSheet.create({
   otpChar:      {fontFamily: fonts.display, fontSize: 22, color: colors.ink},
 
   hiddenInput: {position: 'absolute', opacity: 0, width: 1, height: 1},
-
-  devHintWrap: {alignItems: 'center', marginBottom: spacing.sm},
-  devHint:     {fontFamily: 'monospace', fontSize: 11, color: colors.vermilion},
 
   resendRow:       {flexDirection: 'row', justifyContent: 'center', alignItems: 'center', marginBottom: spacing.xl},
   resendLabel:     {fontFamily: fonts.body, fontSize: 13, color: colors.muted},

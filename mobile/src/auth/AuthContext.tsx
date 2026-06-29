@@ -24,11 +24,19 @@ const AuthContext = createContext<AuthContextType>({
   login: async () => {}, logout: async () => {},
 });
 
+function isTokenExpired(token: string): boolean {
+  try {
+    const payload = JSON.parse(atob(token.split('.')[1].replace(/-/g, '+').replace(/_/g, '/')));
+    return Date.now() >= payload.exp * 1000;
+  } catch {
+    return true;
+  }
+}
+
 export function AuthProvider({children}: {children: React.ReactNode}) {
-  const [user, setUser]     = useState<AuthUser | null>(null);
+  const [user, setUser]       = useState<AuthUser | null>(null);
   const [loading, setLoading] = useState(true);
 
-  // Restore session on mount
   useEffect(() => {
     (async () => {
       try {
@@ -37,9 +45,14 @@ export function AuthProvider({children}: {children: React.ReactNode}) {
           SecureStore.getItemAsync(USER_KEY),
         ]);
         if (token && raw) {
-          const stored: AuthUser = JSON.parse(raw);
-          api.defaults.headers.common['Authorization'] = `Bearer ${token}`;
-          setUser(stored);
+          if (isTokenExpired(token)) {
+            await SecureStore.deleteItemAsync(TOKEN_KEY);
+            await SecureStore.deleteItemAsync(USER_KEY);
+          } else {
+            const stored: AuthUser = JSON.parse(raw);
+            api.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+            setUser(stored);
+          }
         }
       } catch {}
       setLoading(false);
@@ -49,7 +62,6 @@ export function AuthProvider({children}: {children: React.ReactNode}) {
   const login = useCallback(async (token: string, authUser: AuthUser, isNewUser?: boolean) => {
     await SecureStore.setItemAsync(TOKEN_KEY, token);
     await SecureStore.setItemAsync(USER_KEY, JSON.stringify(authUser));
-    // Clear profile-done flag for genuinely new users so ProfileSetupScreen shows
     if (isNewUser) {
       await AsyncStorage.removeItem('tp_profile_done').catch(() => {});
     }

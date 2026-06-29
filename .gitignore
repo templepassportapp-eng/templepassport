@@ -1,5 +1,7 @@
 # Secrets — never commit real values
 .env.prod
+mobile/.env.local
+*firebase-adminsdk*.json
 
 # OS
 .DS_Store

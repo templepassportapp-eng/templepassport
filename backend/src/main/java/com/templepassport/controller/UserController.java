@@ -1,9 +1,9 @@
 package com.templepassport.controller;
 
 import com.templepassport.dto.*;
-import com.templepassport.model.User;
 import com.templepassport.repository.UserRepository;
 import com.templepassport.service.UserService;
+import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -12,7 +12,6 @@ import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/users")
-@CrossOrigin
 public class UserController {
 
     private final UserService userService;
@@ -26,7 +25,13 @@ public class UserController {
     public record UpdateProfileRequest(String name, String city, String state) {}
 
     @PatchMapping("/{id}/profile")
-    public ResponseEntity<Void> updateProfile(@PathVariable UUID id, @RequestBody UpdateProfileRequest req) {
+    public ResponseEntity<Void> updateProfile(@PathVariable UUID id,
+                                              @RequestBody UpdateProfileRequest req,
+                                              HttpServletRequest request) {
+        UUID authenticatedId = (UUID) request.getAttribute("userId");
+        if (!id.equals(authenticatedId)) {
+            return ResponseEntity.status(403).build();
+        }
         userRepo.findById(id).ifPresent(u -> {
             if (req.name()  != null && !req.name().isBlank()) u.setName(req.name());
             if (req.city()  != null) u.setCity(req.city());
