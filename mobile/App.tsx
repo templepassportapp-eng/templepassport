@@ -142,9 +142,11 @@ function AppInner() {
 
   // Initial AsyncStorage read on mount
   useEffect(() => {
+    const timeout = <T,>(p: Promise<T | null>, ms = 3000): Promise<T | null> =>
+      Promise.race([p, new Promise<null>(r => setTimeout(() => r(null), ms))]);
     Promise.all([
-      AsyncStorage.getItem('tp_language'),
-      AsyncStorage.getItem('tp_profile_done'),
+      timeout(AsyncStorage.getItem('tp_language')),
+      timeout(AsyncStorage.getItem('tp_profile_done')),
     ])
       .then(([lang, pd]) => {
         setLangPicked(lang !== null);

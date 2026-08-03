@@ -48,34 +48,53 @@ export default function LoginScreen() {
 
   const handleSendOtp = async () => {
     const digits = phone.replace(/\D/g, '');
+    console.log('[OTP] handleSendOtp, digits length:', digits.length);
     if (digits.length < 10) {
       Alert.alert(t('invalidNumber'), t('invalidNumberMsg'));
       return;
     }
     setBusy(true);
     try {
-      const result = await auth().signInWithPhoneNumber('+91' + digits);
-      setConfirmation(result);
+      console.log('[OTP] calling signInWithPhoneNumber +91' + digits);
+      const timeoutPromise = new Promise<never>((_, reject) =>
+        setTimeout(() => reject(new Error('Firebase phone auth timed out after 30s — check SHA-1 in Firebase Console')), 30000)
+      );
+      const result = await Promise.race([
+        auth().signInWithPhoneNumber('+91' + digits),
+        timeoutPromise,
+      ]);
+      console.log('[OTP] signInWithPhoneNumber resolved');
+      setConfirmation(result as FirebaseAuthTypes.ConfirmationResult);
       setOtp('');
       setStep('otp');
       setTimeout(() => otpRef.current?.focus(), 400);
-    } catch {
-      Alert.alert(t('errorTitle'), t('otpError'));
+    } catch (e: any) {
+      const code = e?.code ?? 'unknown';
+      console.log('[OTP] ERROR code:', code, 'msg:', e?.message);
+      Alert.alert(t('errorTitle'), `[${code}]\n${e?.message ?? t('otpError')}`);
     } finally {
       setBusy(false);
     }
   };
 
   const handleVerifyOtp = async () => {
+    console.log('[VERIFY] called, confirmation:', !!confirmation, 'otp.length:', otp.length);
     if (!confirmation || otp.length !== 6) return;
     setBusy(true);
     try {
+      console.log('[VERIFY] confirming OTP...');
       const result = await confirmation.confirm(otp);
+      console.log('[VERIFY] OTP confirmed, getting idToken...');
       const idToken = await result!.user.getIdToken();
+      console.log('[VERIFY] idToken length:', idToken?.length, 'starts:', idToken?.substring(0, 20));
+      console.log('[VERIFY] idToken obtained, calling backend /auth/firebase-verify...');
       const res = await firebaseVerify(idToken);
+      console.log('[VERIFY] backend responded, calling login...');
       await login(res.token, {userId: res.userId, phone: res.phone, name: res.name}, res.isNewUser);
-    } catch {
-      Alert.alert(t('incorrectCode'), t('incorrectCodeMsg'));
+      console.log('[VERIFY] login complete');
+    } catch (e: any) {
+      console.log('[VERIFY] ERROR:', e?.code, e?.message, e?.response?.status, e?.response?.data);
+      Alert.alert(t('incorrectCode'), `${e?.code ?? ''}\n${e?.message ?? t('incorrectCodeMsg')}`);
       setOtp('');
       otpRef.current?.focus();
     } finally {

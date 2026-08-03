@@ -62,6 +62,14 @@ export async function uploadAvatar(userId: string, formData: FormData): Promise<
 }
 
 export async function firebaseVerify(idToken: string): Promise<{token: string; userId: string; phone: string; name: string; isNewUser: boolean}> {
-  const {data} = await api.post('/auth/firebase-verify', {idToken});
-  return data;
+  const url = `${API_BASE_URL}/auth/firebase-verify`;
+  console.log('[firebaseVerify] url:', url, 'token length:', idToken?.length);
+  const res = await fetch(url, {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({idToken}),
+  });
+  console.log('[firebaseVerify] status:', res.status);
+  if (!res.ok) throw new Error(`HTTP ${res.status}`);
+  return res.json();
 }

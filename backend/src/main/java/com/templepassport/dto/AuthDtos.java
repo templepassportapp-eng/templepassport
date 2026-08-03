@@ -1,5 +1,6 @@
 package com.templepassport.dto;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import java.util.UUID;
 
 public class AuthDtos {
@@ -18,5 +19,5 @@ public class AuthDtos {
             boolean isNewUser
     ) {}
 
-    public record FirebaseVerifyRequest(String idToken) {}
+    public record FirebaseVerifyRequest(@JsonProperty("idToken") String idToken) {}
 }

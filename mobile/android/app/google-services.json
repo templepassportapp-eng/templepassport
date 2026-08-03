@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "546756389966",
+    "project_id": "temple-passport-30183",
+    "storage_bucket": "temple-passport-30183.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:546756389966:android:670221973e363d7845a71f",
+        "android_client_info": {
+          "package_name": "in.templepassport.app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDAHRsiOo16qMcQ9Oy1khKwNFZLblDMKY0"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

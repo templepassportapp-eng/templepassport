@@ -40,9 +40,11 @@ export function AuthProvider({children}: {children: React.ReactNode}) {
   useEffect(() => {
     (async () => {
       try {
+        const timeout = <T,>(p: Promise<T | null>, ms = 3000): Promise<T | null> =>
+          Promise.race([p, new Promise<null>(r => setTimeout(() => r(null), ms))]);
         const [token, raw] = await Promise.all([
-          SecureStore.getItemAsync(TOKEN_KEY),
-          SecureStore.getItemAsync(USER_KEY),
+          timeout(SecureStore.getItemAsync(TOKEN_KEY)),
+          timeout(SecureStore.getItemAsync(USER_KEY)),
         ]);
         if (token && raw) {
           if (isTokenExpired(token)) {
