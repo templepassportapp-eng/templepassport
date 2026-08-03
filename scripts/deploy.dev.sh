@@ -53,7 +53,8 @@ if [ "$STATUS" != "healthy" ]; then
   exit 1
 fi
 
-echo "[dev-deploy] Reloading nginx..."
+echo "[dev-deploy] Starting/reloading nginx..."
+$COMPOSE up -d --no-deps --no-build nginx
 $COMPOSE exec -T nginx nginx -s reload || true
 
 echo "[dev-deploy] Pruning old images..."
