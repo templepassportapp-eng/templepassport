@@ -2,6 +2,7 @@ package com.templepassport.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.templepassport.repository.UserRepository;
+import com.templepassport.service.AvatarStorageService;
 import com.templepassport.service.UserService;
 import com.templepassport.util.JwtUtil;
 import org.junit.jupiter.api.Test;
@@ -31,6 +32,7 @@ class UserControllerTest {
     @MockBean UserService userService;
     @MockBean UserRepository userRepo;
     @MockBean JwtUtil jwtUtil;
+    @MockBean AvatarStorageService avatarStorageService;
 
     private static final UUID USER_ID = UUID.randomUUID();
     private static final UUID OTHER_ID = UUID.randomUUID();
